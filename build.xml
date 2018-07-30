@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="ant-jmeter-test" default="all" basedir=".">
+	<tstamp>
+		<format property="time" pattern="yyyyMMddHHmm" />
+	</tstamp>
+	<property name="jmeter.home" value="/usr/local/jmeter/" />
+	<property name="jmeter.testcase.dir" value="${jmeter.home}/api_test/TestCase/" />
+	<property name="jmeter.result.dir" value="${jmeter.home}/api_test/TestResult/" />
+	<property name="jmeter.result.jtl.dir" value="${jmeter.home}/api_test/TestResult/jtl" />
+	<property name="jmeter.result.html.dir" value="${jmeter.home}/api_test/TestResult/html" />
+	<property name="ReportName" value="TestReport" />
+	<property name="jmeter.result.jtlName" value="${jmeter.result.jtl.dir}/${ReportName}_${time}.jtl" />
+	<property name="jmeter.result.htmlName" value="${jmeter.result.html.dir}/${ReportName}_${time}.html" />
+
+	<path id= "compile.classpath"> 
+		<pathelement path = "${jmeter.home}/lib/mail-1.5.0-b01.jar"/> 
+	</path> 
+
+	<target name="all">
+		<antcall target="test"/>
+		<antcall target="reportTask" />
+	</target>
+
+	<target name="test">
+		<taskdef name="jmeter" classname="org.programmerplanet.ant.taskdefs.jmeter.JMeterTask" />
+		<jmeter jmeterhome="${jmeter.home}" resultlog="${jmeter.result.jtlName}">
+			<!--你要运行的jmx文件,参考jmeter的官网配置-->
+			<testplans dir="${jmeter.testcase.dir}" includes="${testCase}.jmx" />
+			<property name="jmeter.save.saveservice.output_format" value="xml"/>
+			<property name="jmeter.save.saveservice.url" value="true"/>
+			<property name="jmeter.save.saveservice.samplerData" value="true"/>
+			<property name="jmeter.save.saveservice.assertions" value="true"/>
+			<property name="jmeter.save.saveservice.successful" value="true"/>
+			<property name="jmeter.save.saveservice.response_code" value="true"/>
+			<property name="jmeter.save.saveservice.label" value="true"/>
+		</jmeter>
+	</target>
+
+	<target name="report">
+		<xslt in="${jmeter.result.jtlName}"
+		      out="${jmeter.result.htmlName}"
+		      style="${jmeter.home}/extras/jmeter.results.shanhe.me.xsl" />
+
+		<copy todir="${jmeter.result.html.dir}">
+			<fileset dir="${jmeter.home}/extras">
+				<include name="collapse.png" />
+				<include name="expand.png" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!--配置邮件发送-->
+	<target name="reportTask">
+		<taskdef name="myReportTask" classname="org.programmerplanet.ant.taskdefs.jmeter.ReportTask" />
+		<myReportTask in="${jmeter.result.jtlName}"
+				out="${jmeter.result.htmlName}"
+				mailhost="smtp.exmail.qq.com"
+				ssl="true"
+				user="Groot@yunlai.cn"
+				password="*****"
+				mailTitle="Pro_云来接口自动化测试报告_${time}"
+				from="Groot@yunlai.cn"
+				toAddress="${runUser}@yunlai.cn"
+				runUser="${runUser}"
+				noteInfo="生产环境">
+		</myReportTask>
+	</target>
+</project>
